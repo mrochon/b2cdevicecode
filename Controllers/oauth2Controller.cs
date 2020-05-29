@@ -23,6 +23,7 @@ namespace B2CDeviceCode.Controllers
     [ApiController]
     public class oauth2Controller : ControllerBase
     {
+        
         public oauth2Controller(ConnectionMultiplexer redis, IDataProtectionProvider crypto, IOptions<IssuanceOptions> options)
         {
             _redis = redis;

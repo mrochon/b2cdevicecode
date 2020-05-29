@@ -47,8 +47,13 @@ namespace B2CDeviceCode
                 .AddScoped<IConfidentialClientApplication>((svcProvider) =>
                 {
                     var opts = new ConfidentialClientApplicationOptions();
-                    Configuration.Bind("OAuth2Client", opts);
-                    return ConfidentialClientApplicationBuilder.CreateWithApplicationOptions(opts).Build();
+                    Configuration.Bind("MSAL", opts);
+                    var AuthorityBase = $"https://mrochonb2cprod.b2clogin.com/tfp/mrochonb2cprod.onmicrosoft.com/";
+                    var Authority = $"{AuthorityBase}B2C_1_BasicSUSI";
+                    return ConfidentialClientApplicationBuilder
+                        .CreateWithApplicationOptions(opts)
+                        .WithB2CAuthority(Authority)
+                        .Build();
                 })
                 .AddAuthentication(options =>
                 {
@@ -61,16 +66,14 @@ namespace B2CDeviceCode
                     })
                     .AddOpenIdConnect(AzureADB2CDefaults.AuthenticationScheme, options =>
                     {
-                        Configuration.Bind("AzureAD", options);
-                        options.MetadataAddress = $"https://{options.Authority}.b2clogin.com/{options.Authority}.onmicrosoft.com/b2c_1a_{policy}/v2.0/.well-known/openid-configuration";
-                        options.ResponseType = OpenIdConnectResponseType.CodeIdToken;
+                        Configuration.Bind("OIDC", options);
                         //options.Scope.Add("offline_access"); // otherwise no refresh token or acct created in cache
                         options.Events.OnRedirectToIdentityProvider = async (ctx) =>
                         {
                             var request = (RequestStatus)ctx.Properties.Parameters["request"];
-                            options.ClientId = request.client_id;
+                            //ctx.ProtocolMessage.ClientId = options.ClientId = request.client_id;
                             options.Scope.Clear();
-                            foreach (var scope in (IEnumerable<string>)ctx.Properties.Parameters["scopes"])
+                            foreach (var scope in request.scopes)
                                 options.Scope.Add(scope);
                             await Task.FromResult(0);
                         };
@@ -115,6 +118,7 @@ namespace B2CDeviceCode
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>

@@ -8,7 +8,7 @@ namespace TestApp
     {
         static string clientId = "f0df2619-4370-4f7e-8a77-b6a97fe2cabc";
         static string RedirectUri = "app://devicecode";
-        static string[] Scopes = { "abc" };
+        static string[] Scopes = { "https://mrochonb2cprod.onmicrosoft.com/webapi/read_policies" };
 
         static void Main(string[] args)
         {

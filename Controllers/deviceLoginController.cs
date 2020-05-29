@@ -34,12 +34,12 @@ namespace B2CDeviceCode.Controllers
         {
             try
             {
-                /*var db = _redis.GetDatabase();
+                var db = _redis.GetDatabase();
                 var statusStr = await db.StringGetAsync(entry.userCode);
                 if (statusStr.IsNull)
-                    return new NotFoundResult();*/
+                    return new NotFoundResult();
                 //TODO: verify request is the same as original?
-                var statusStr = "{\"client_id\":\"f0df2619-4370-4f7e-8a77-b6a97fe2cabc\",\"scopes\":[\"abc\",\"offline_access\",\"profile\",\"openid\"],\"userCode\":\"OA871Q\",\"journeyName\":\"journey\",\"authResult\":null,\"isReady\":false}";
+                //var statusStr = "{\"client_id\":\"f0df2619-4370-4f7e-8a77-b6a97fe2cabc\",\"scopes\":[\"https://mrochonb2cprod.onmicrosoft.com/webapi/read_policies\",\"offline_access\",\"profile\",\"openid\"],\"userCode\":\"OA871Q\",\"journeyName\":\"journey\",\"authResult\":null,\"isReady\":false}";
                 var status = JsonConvert.DeserializeObject<RequestStatus>(statusStr);
                 var authParms = new AuthenticationProperties() 
                 { 
