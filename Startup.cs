@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using B2CDeviceCode.Models;
 using B2CDeviceCode.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.AzureADB2C.UI;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
@@ -44,17 +47,6 @@ namespace B2CDeviceCode
                     return ConnectionMultiplexer.Connect(opts);
                 })
                 .Configure<IssuanceOptions>(options => Configuration.GetSection("IssuanceOptions").Bind(options))
-                .AddScoped<IConfidentialClientApplication>((svcProvider) =>
-                {
-                    var opts = new ConfidentialClientApplicationOptions();
-                    Configuration.Bind("MSAL", opts);
-                    var AuthorityBase = $"https://mrochonb2cprod.b2clogin.com/tfp/mrochonb2cprod.onmicrosoft.com/";
-                    var Authority = $"{AuthorityBase}B2C_1_BasicSUSI";
-                    return ConfidentialClientApplicationBuilder
-                        .CreateWithApplicationOptions(opts)
-                        .WithB2CAuthority(Authority)
-                        .Build();
-                })
                 .AddAuthentication(options =>
                 {
                     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -67,14 +59,15 @@ namespace B2CDeviceCode
                     .AddOpenIdConnect(AzureADB2CDefaults.AuthenticationScheme, options =>
                     {
                         Configuration.Bind("OIDC", options);
+                        options.Scope.Add("https://mrochonb2cprod.onmicrosoft.com/webapi/read_policies");
                         //options.Scope.Add("offline_access"); // otherwise no refresh token or acct created in cache
                         options.Events.OnRedirectToIdentityProvider = async (ctx) =>
                         {
                             var request = (RequestStatus)ctx.Properties.Parameters["request"];
                             //ctx.ProtocolMessage.ClientId = options.ClientId = request.client_id;
-                            options.Scope.Clear();
-                            foreach (var scope in request.scopes)
-                                options.Scope.Add(scope);
+                            //options.Scope.Clear();
+                            //foreach (var scope in request.scopes)
+                            //    options.Scope.Add(scope);
                             await Task.FromResult(0);
                         };
                         options.Events.OnAuthorizationCodeReceived = async ctx =>
@@ -87,15 +80,19 @@ namespace B2CDeviceCode
                             if (data.Value.IsNull)
                                 throw new Exception("Request status not found");
                             var status = JsonConvert.DeserializeObject<RequestStatus>(data.Value);
-                            var oauth2 = ctx.HttpContext.RequestServices.GetService<IConfidentialClientApplication>();
-                            status.authResult = await oauth2.AcquireTokenByAuthorizationCode(status.scopes, ctx.ProtocolMessage.Code).ExecuteAsync();
+                            var http = new HttpClient();
+                            var props = ctx.TokenEndpointRequest.Parameters.ToList();
+                            props.Add(new KeyValuePair<string, string>("scope", "https://mrochonb2cprod.onmicrosoft.com/webapi/read_policies"));
+                            http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                            var resp = await http.PostAsync(
+                                "https://mrochonb2cprod.b2clogin.com/mrochonb2cprod.onmicrosoft.com/b2c_1_basicsusi/oauth2/v2.0/token", 
+                                new FormUrlEncodedContent(props));
                             status.isReady = true;
+                            status.authResult = JsonConvert.DeserializeObject<AuthenticationResult>(await resp.Content.ReadAsStringAsync());
                             await db.StringSetAsync(userCode, JsonConvert.SerializeObject(status), data.Expiry, When.Exists);
-                            ctx.HandleCodeRedemption(ctx.ProtocolMessage.IdToken, ctx.ProtocolMessage.IdToken);
-                        };
+                            ctx.HandleResponse();
+                        }; 
                     });
-                //.AddAuthentication(AzureADB2CDefaults.OpenIdScheme)
-                //    .AddAzureADB2C(options => Configuration.Bind("AzureADB2C", options));
 
             services.AddControllersWithViews();
         }
