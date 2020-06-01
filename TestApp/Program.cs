@@ -31,6 +31,8 @@ namespace TestApp
                 Console.WriteLine(res.UserCode);
                 await Task.FromResult(0); 
             }).ExecuteAsync().ConfigureAwait(false);
+
+            Console.WriteLine(authResult.AccessToken);
         }
     }
 }

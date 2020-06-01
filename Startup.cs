@@ -60,7 +60,7 @@ namespace B2CDeviceCode
                     .AddOpenIdConnect(AzureADB2CDefaults.AuthenticationScheme, options =>
                     {
                         Configuration.Bind("OIDC", options);
-                        //options.ResponseType = OpenIdConnectResponseType.CodeIdToken;
+                        //options.ResponseType = OpenIdConnectResponseType.CodeIdToken; // using id_token disables PKCE
                         options.Events.OnRedirectToIdentityProvider = async (ctx) =>
                         {
                             var request = (RequestStatus)ctx.Properties.Parameters["request"];
@@ -81,10 +81,13 @@ namespace B2CDeviceCode
                             var status = JsonConvert.DeserializeObject<RequestStatus>(data.Value);
                             var http = new HttpClient();
                             var props = ctx.TokenEndpointRequest.Parameters.ToList();
-                            props.Add(new KeyValuePair<string, string>("scope", "https://mrochonb2cprod.onmicrosoft.com/webapi/read_policies offline_access openid"));
+                            var scopes = status.scopes.Aggregate((i, j) => $"{i} {j}");
+                            var tokenUrl = ctx.Options.MetadataAddress.Replace("v2.0/.well-known/openid-configuration", "oauth2/v2.0/token");
+                            props.Add(new KeyValuePair<string, string>("scope", $"{scopes} offline_access openid")); // Not getting id_token breaks MSAL caching on clients side
                             http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                             var resp = await http.PostAsync(
-                                $"https://mrochonb2cprod.b2clogin.com/mrochonb2cprod.onmicrosoft.com/{status.journeyName}/oauth2/v2.0/token", 
+                                tokenUrl,
+                                //$"https://mrochonb2cprod.b2clogin.com/mrochonb2cprod.onmicrosoft.com/{status.journeyName}/oauth2/v2.0/token", 
                                 new FormUrlEncodedContent(props));
                             if (resp.IsSuccessStatusCode)
                             {
@@ -92,7 +95,7 @@ namespace B2CDeviceCode
                                 status.authResult = await resp.Content.ReadAsStringAsync();
                                 var rresp = await db.StringSetAsync(userCode, JsonConvert.SerializeObject(status), data.Expiry, When.Exists);
                             }
-                            ctx.Response.Redirect("https://localhost:44358");
+                            ctx.Response.Redirect("https://localhost:44358/done");
                             ctx.SkipHandler();
                         }; 
                     });
