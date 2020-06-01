@@ -20,15 +20,17 @@ namespace TestApp
             var oauth2 = PublicClientApplicationBuilder
                 .Create(clientId)
                 .WithAdfsAuthority("https://localhost:44358/adfs", false)
-                .WithExtraQueryParameters("p=journey")
-                .WithRedirectUri(RedirectUri).Build();
+                .WithExtraQueryParameters("p=B2C_1_BasicSUSI")
+                .WithRedirectUri(RedirectUri)
+                .Build();
+
             var authResult = await oauth2.AcquireTokenWithDeviceCode(Scopes, async (res) => 
             {
                 Console.WriteLine(res.Message);
                 Console.WriteLine(res.VerificationUrl);
                 Console.WriteLine(res.UserCode);
                 await Task.FromResult(0); 
-            }).ExecuteAsync();
+            }).ExecuteAsync().ConfigureAwait(false);
         }
     }
 }

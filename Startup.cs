@@ -49,6 +49,7 @@ namespace B2CDeviceCode
                 .Configure<IssuanceOptions>(options => Configuration.GetSection("IssuanceOptions").Bind(options))
                 .AddAuthentication(options =>
                 {
+                    //options.DefaultAuthenticateScheme = AzureADB2CDefaults.AuthenticationScheme;
                     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 })
                     .AddCookie(options =>
@@ -59,15 +60,13 @@ namespace B2CDeviceCode
                     .AddOpenIdConnect(AzureADB2CDefaults.AuthenticationScheme, options =>
                     {
                         Configuration.Bind("OIDC", options);
-                        options.Scope.Add("https://mrochonb2cprod.onmicrosoft.com/webapi/read_policies");
-                        //options.Scope.Add("offline_access"); // otherwise no refresh token or acct created in cache
+                        //options.ResponseType = OpenIdConnectResponseType.CodeIdToken;
                         options.Events.OnRedirectToIdentityProvider = async (ctx) =>
                         {
                             var request = (RequestStatus)ctx.Properties.Parameters["request"];
-                            //ctx.ProtocolMessage.ClientId = options.ClientId = request.client_id;
-                            //options.Scope.Clear();
-                            //foreach (var scope in request.scopes)
-                            //    options.Scope.Add(scope);
+                            ctx.ProtocolMessage.Parameters["client_id"] = request.client_id;
+                            var scopes = request.scopes.Aggregate((i, j) => $"{i} {j}");
+                            ctx.ProtocolMessage.Parameters["scope"] = $"{ctx.ProtocolMessage.Parameters["scope"]} {scopes}";
                             await Task.FromResult(0);
                         };
                         options.Events.OnAuthorizationCodeReceived = async ctx =>
@@ -82,15 +81,19 @@ namespace B2CDeviceCode
                             var status = JsonConvert.DeserializeObject<RequestStatus>(data.Value);
                             var http = new HttpClient();
                             var props = ctx.TokenEndpointRequest.Parameters.ToList();
-                            props.Add(new KeyValuePair<string, string>("scope", "https://mrochonb2cprod.onmicrosoft.com/webapi/read_policies"));
+                            props.Add(new KeyValuePair<string, string>("scope", "https://mrochonb2cprod.onmicrosoft.com/webapi/read_policies offline_access openid"));
                             http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                             var resp = await http.PostAsync(
-                                "https://mrochonb2cprod.b2clogin.com/mrochonb2cprod.onmicrosoft.com/b2c_1_basicsusi/oauth2/v2.0/token", 
+                                $"https://mrochonb2cprod.b2clogin.com/mrochonb2cprod.onmicrosoft.com/{status.journeyName}/oauth2/v2.0/token", 
                                 new FormUrlEncodedContent(props));
-                            status.isReady = true;
-                            status.authResult = JsonConvert.DeserializeObject<AuthenticationResult>(await resp.Content.ReadAsStringAsync());
-                            await db.StringSetAsync(userCode, JsonConvert.SerializeObject(status), data.Expiry, When.Exists);
-                            ctx.HandleResponse();
+                            if (resp.IsSuccessStatusCode)
+                            {
+                                status.isReady = true;
+                                status.authResult = await resp.Content.ReadAsStringAsync();
+                                var rresp = await db.StringSetAsync(userCode, JsonConvert.SerializeObject(status), data.Expiry, When.Exists);
+                            }
+                            ctx.SkipHandler();
+                            ctx.Response.Redirect("https://localhost:44358");
                         }; 
                     });
 

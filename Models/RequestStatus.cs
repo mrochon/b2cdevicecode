@@ -12,7 +12,7 @@ namespace B2CDeviceCode.Models
         public string[] scopes { get; set; }
         public string userCode { get; set; }
         public string journeyName { get; set; }
-        public AuthenticationResult authResult { get; set; }
+        public string authResult { get; set; }
         public bool isReady { get; set; }
         public override bool Equals(Object obj)
         {

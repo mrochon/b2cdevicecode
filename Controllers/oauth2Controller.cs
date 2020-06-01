@@ -83,7 +83,8 @@ namespace B2CDeviceCode.Controllers
             var status = JsonConvert.DeserializeObject<RequestStatus>(resp);
             if (!status.isReady)
                 return new BadRequestObjectResult(badResult);
-            return new JsonResult(status.authResult);
+            return this.Content(status.authResult, "application/json");
+            //return new OkObjectResult(status.authResult);
         }
         private static Random random = new Random();
         public static string RandomString(int length)
