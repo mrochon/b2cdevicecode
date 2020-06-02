@@ -52,7 +52,10 @@ namespace B2CDeviceCode.Controllers
             {
                 //TODO: use DI for crypto
                 requestStatus.userCode = RandomString(6);
-                saved = await db.StringSetAsync(requestStatus.userCode, JsonConvert.SerializeObject(requestStatus), TimeSpan.FromMinutes(5), When.NotExists);
+                saved = await db.StringSetAsync(
+                    requestStatus.userCode, 
+                    JsonConvert.SerializeObject(requestStatus), 
+                    TimeSpan.FromSeconds(_options.Value.ExpiresInSeconds), When.NotExists);
             } while (!saved);
             var url = this.Request.Path;
             return new JsonResult(new
@@ -84,7 +87,6 @@ namespace B2CDeviceCode.Controllers
             if (!status.isReady)
                 return new BadRequestObjectResult(badResult);
             return this.Content(status.authResult, "application/json");
-            //return new OkObjectResult(status.authResult);
         }
         private static Random random = new Random();
         public static string RandomString(int length)

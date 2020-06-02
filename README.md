@@ -28,3 +28,4 @@ at this stage it needs to be also hardcoded in the web app. The value passed by 
 2. Relies on B2C allowing a public client to have an https-schemed reply url.
 4. The user, after entering the device code and authenticating is presented with an error html page. Can be ignored. The client should show the
 access token shortly afterwards.
+5. Token server is hard-coded to use my own B2C (mrochonb2cprod).

@@ -1,10 +1,10 @@
 ﻿@model B2CDeviceCode.Models.UserCodeEntry
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "User code";
 }
 
-<h1>Enter device code</h1>
+<h1>Enter short user code</h1>
 
 <hr />
 <div class="row">
@@ -12,19 +12,15 @@
         <form asp-action="Index">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
-                <label asp-for="userCode" class="control-label"></label>
+                @*<label asp-for="userCode" class="control-label"></label>*@
                 <input asp-for="userCode" class="form-control" />
                 <span asp-validation-for="userCode" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                <input type="submit" value="Login" class="btn btn-primary" />
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {

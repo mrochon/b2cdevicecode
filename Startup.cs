@@ -128,7 +128,7 @@ namespace B2CDeviceCode
             {
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=devicelogin}/{action=Index}/{id?}");
             });
         }
     }
