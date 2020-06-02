@@ -7,12 +7,12 @@ namespace TestApp
     class Program
     {
         static string clientId = "f0df2619-4370-4f7e-8a77-b6a97fe2cabc";
-        static string RedirectUri = "app://devicecode";
-        static string[] Scopes = { "https://mrochonb2cprod.onmicrosoft.com/webapi/read_policies" };
+        static string redirectUri = "app://devicecode";
+        static string[] scopes = { "https://mrochonb2cprod.onmicrosoft.com/webapi/read_policies" };
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Console.WriteLine("Get an OAuth2 access token using the Device Code grant using Azure B2C...");
             (new Program()).GetAccessToken().Wait();
         }
         public async Task GetAccessToken()
@@ -21,10 +21,10 @@ namespace TestApp
                 .Create(clientId)
                 .WithAdfsAuthority("https://localhost:44358/adfs", false)
                 .WithExtraQueryParameters("p=B2C_1_BasicSUSI")
-                .WithRedirectUri(RedirectUri)
+                .WithRedirectUri(redirectUri)
                 .Build();
 
-            var authResult = await oauth2.AcquireTokenWithDeviceCode(Scopes, async (res) => 
+            var authResult = await oauth2.AcquireTokenWithDeviceCode(scopes, async (res) => 
             {
                 Console.WriteLine(res.Message);
                 Console.WriteLine($"Url: {res.VerificationUrl}");
