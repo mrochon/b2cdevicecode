@@ -27,8 +27,8 @@ namespace TestApp
             var authResult = await oauth2.AcquireTokenWithDeviceCode(Scopes, async (res) => 
             {
                 Console.WriteLine(res.Message);
-                Console.WriteLine(res.VerificationUrl);
-                Console.WriteLine(res.UserCode);
+                Console.WriteLine($"Url: {res.VerificationUrl}");
+                Console.WriteLine($"Device code: {res.UserCode}");
                 await Task.FromResult(0); 
             }).ExecuteAsync().ConfigureAwait(false);
 
