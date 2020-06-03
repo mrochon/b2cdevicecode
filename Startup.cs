@@ -65,7 +65,7 @@ namespace B2CDeviceCode
                         {
                             var request = (RequestStatus)ctx.Properties.Parameters["request"];
                             var b2cName = options.MetadataAddress.Split('/')[2].Split('.')[0];
-                            ctx.ProtocolMessage.AuthorizationEndpoint = $"https://{b2cName}.b2clogin.com/{b2cName}.onmicrosoft.com/{request.journeyName}/v2.0/oauth2/authorize";
+                            ctx.ProtocolMessage.IssuerAddress = ctx.ProtocolMessage.IssuerAddress.Replace("b2c_1_basicsusi", request.journeyName);
                             ctx.ProtocolMessage.Parameters["client_id"] = request.client_id;
                             var scopes = request.scopes.Aggregate((i, j) => $"{i} {j}");
                             ctx.ProtocolMessage.Parameters["scope"] = $"{ctx.ProtocolMessage.Parameters["scope"]} {scopes}";
