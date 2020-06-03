@@ -64,6 +64,8 @@ namespace B2CDeviceCode
                         options.Events.OnRedirectToIdentityProvider = async (ctx) =>
                         {
                             var request = (RequestStatus)ctx.Properties.Parameters["request"];
+                            var b2cName = options.MetadataAddress.Split('/')[2].Split('.')[0];
+                            ctx.ProtocolMessage.AuthorizationEndpoint = $"https://{b2cName}.b2clogin.com/{b2cName}.onmicrosoft.com/{request.journeyName}/v2.0/oauth2/authorize";
                             ctx.ProtocolMessage.Parameters["client_id"] = request.client_id;
                             var scopes = request.scopes.Aggregate((i, j) => $"{i} {j}");
                             ctx.ProtocolMessage.Parameters["scope"] = $"{ctx.ProtocolMessage.Parameters["scope"]} {scopes}";
@@ -95,8 +97,8 @@ namespace B2CDeviceCode
                                 status.authResult = await resp.Content.ReadAsStringAsync();
                                 var rresp = await db.StringSetAsync(userCode, JsonConvert.SerializeObject(status), data.Expiry, When.Exists);
                             }
-                            ctx.Response.Redirect("https://localhost:44358/done");
-                            ctx.SkipHandler();
+                            ctx.Response.Redirect("https://localhost:44358/devicelogin/Result");
+                            ctx.HandleResponse();
                         }; 
                     });
 

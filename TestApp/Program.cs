@@ -20,7 +20,7 @@ namespace TestApp
             var oauth2 = PublicClientApplicationBuilder
                 .Create(clientId)
                 .WithAdfsAuthority("https://localhost:44358/adfs", false)
-                .WithExtraQueryParameters("p=B2C_1_BasicSUSI")
+                .WithExtraQueryParameters("p=B2C_1_SignUpWithEmail")
                 .WithRedirectUri(redirectUri)
                 .Build();
 
