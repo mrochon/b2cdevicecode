@@ -1,0 +1,82 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Device Code sample 3</title>
+    <script>
+        var tokenRequestBody = "";
+        function initiateDC() {
+            document.getElementById("initResponse").style.visibility = "hidden";
+            document.getElementById("tokenResponse").style.visibility = "hidden";
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4) {
+                    document.getElementById("initResponse").style.visibility = "visible";
+                    if (this.status == 200) {
+                        var resp = JSON.parse(this.responseText);
+                        document.getElementById("response").innerHTML = this.responseText;
+                        document.getElementById("userCode").innerHTML = resp.user_code;
+                        document.getElementById("verificationUrl").innerHTML = resp.verification_url;
+                        document.getElementById("verificationUrl").href = resp.verification_url;
+                        tokenRequestBody = "client_id=f0df2619-4370-4f7e-8a77-b6a97fe2cabc&client_info=1&scope=https%3A%2F%2Fmrochonb2cprod.onmicrosoft.com%2Fwebapi%2Fread_policies+offline_access+openid+profile&grant_type=device_code&device_code=" + resp.device_code;
+                        document.getElementById("getTokenBody").innerHTML = tokenRequestBody;
+                    } else {
+                        document.getElementById("response").innerHTML = this.status;
+                    }
+                }
+            };
+            xhttp.open("POST", "https://b2cdevicecode.azurewebsites.net/adfs/oauth2/devicecode?p=B2C_1_BasicSUSI", true);
+            xhttp.setRequestHeader("Accept", "application/json");
+            xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            xhttp.send("client_id=f0df2619-4370-4f7e-8a77-b6a97fe2cabc&scope=https%3A%2F%2Fmrochonb2cprod.onmicrosoft.com%2Fwebapi%2Fread_policies+offline_access+profile+openid");
+            document.getElementById("response").innerHTML = "Started...";
+        }
+        function getToken() {
+            document.getElementById("tokenResponse").style.visibility = "hidden";
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4) {
+                    document.getElementById("tokenResponse").style.visibility = "visible";
+                    if (this.status == 200) {
+                        document.getElementById("trResponse").innerHTML = this.responseText;
+                    } else {
+                        document.getElementById("trResponse").innerHTML = this.status;
+                    }
+                }
+            };
+            xhttp.open("POST", "https://b2cdevicecode.azurewebsites.net/adfs/oauth2/token?p=B2C_1_BasicSUSI", true);
+            xhttp.setRequestHeader("Accept", "application/json");
+            xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            //xhttp.send(document.getElementById("getTokenBody").innerHTML);
+            xhttp.send(tokenRequestBody);
+            document.getElementById("response").innerHTML = "Getting token...";
+    }
+    </script>
+</head>
+<body>
+
+    <h2>Start Device Code request</h2>
+
+    <button type="button" onclick="initiateDC()">Initiate Device Code request</button>
+    <p id="getTokenBody" style="visibility:visible;" />
+
+    <div id="initResponse" style="visibility:hidden;">
+        <h3>Initilization complete</h3>
+        <p id="response">...</p>
+        <br />
+        <p>Navigate to <a id="verificationUrl" /></p>
+        <p>Enter this code: <b id="userCode"></b></p>
+        <p>   and signin/up, press button below to get the access token.</p>
+        <br />
+
+        <h3>Token request</h3>
+        <p id="tokenReqUrl" />
+        <p id="tokenReqBody" />
+        <button onclick="getToken()">Get token</button>
+        <div id="tokenResponse" style="visibility:hidden;">
+            <p id="trResponse">...</p>
+        </div>
+    </div>
+</body>
+</html>

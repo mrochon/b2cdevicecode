@@ -97,7 +97,8 @@ namespace B2CDeviceCode
                                 status.authResult = await resp.Content.ReadAsStringAsync();
                                 var rresp = await db.StringSetAsync(userCode, JsonConvert.SerializeObject(status), data.Expiry, When.Exists);
                             }
-                            ctx.Response.Redirect("https://localhost:44358/devicelogin/Result");
+                            var req = ctx.HttpContext.Request;
+                            ctx.Response.Redirect($"{req.Scheme}://{req.Host.Value}/devicelogin/Result");
                             ctx.HandleResponse();
                         }; 
                     });
