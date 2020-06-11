@@ -3,7 +3,7 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8" />
-    <title>Device Code sample 3</title>
+    <title>Device Code sample page</title>
     <script>
         var tokenRequestBody = "";
         function initiateDC() {
@@ -20,7 +20,7 @@
                         document.getElementById("verificationUrl").innerHTML = resp.verification_url;
                         document.getElementById("verificationUrl").href = resp.verification_url;
                         tokenRequestBody = "client_id=f0df2619-4370-4f7e-8a77-b6a97fe2cabc&client_info=1&scope=https%3A%2F%2Fmrochonb2cprod.onmicrosoft.com%2Fwebapi%2Fread_policies+offline_access+openid+profile&grant_type=device_code&device_code=" + resp.device_code;
-                        document.getElementById("getTokenBody").innerHTML = tokenRequestBody;
+                        //document.getElementById("getTokenBody").innerHTML = tokenRequestBody;
                     } else {
                         document.getElementById("response").innerHTML = this.status;
                     }
@@ -56,18 +56,21 @@
 </head>
 <body>
 
-    <h2>Start Device Code request</h2>
+    <h2>Get access token from B2C using OAuth2 Device Authorization Code flow</h2>
 
     <button type="button" onclick="initiateDC()">Initiate Device Code request</button>
-    <p id="getTokenBody" style="visibility:visible;" />
+    <p><b>POST</b> <i>https://b2cdevicecode.azurewebsites.net/adfs/oauth2/devicecode?p=B2C_1_BasicSUSI</i></p>
+    <p><i>client_id=f0df2619-4370-4f7e-8a77-b6a97fe2cabc&scope=https%3A%2F%2Fmrochonb2cprod.onmicrosoft.com%2Fwebapi%2Fread_policies+offline_access+profile+openid"</i></p>
+
+    <!--<p id="getTokenBody" style="visibility:hidden;" />-->
 
     <div id="initResponse" style="visibility:hidden;">
-        <h3>Initilization complete</h3>
+        <h3>Initilization response</h3>
         <p id="response">...</p>
         <br />
-        <p>Navigate to <a id="verificationUrl" /></p>
-        <p>Enter this code: <b id="userCode"></b></p>
-        <p>   and signin/up, press button below to get the access token.</p>
+        <p>Navigate to this url on this or any other device: <a id="verificationUrl" /></p>
+        <p>And enter this code: <b id="userCode"></b></p>
+        <p>   signin/up. The Get Token button below simulates device's attempts to get the token. It should succeed once you have signedin using above url.</p>
         <br />
 
         <h3>Token request</h3>
