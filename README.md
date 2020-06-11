@@ -15,8 +15,8 @@ The sample consists of two projects and html source for the sample page:
 
 To use thi sample with your own B2C tenant:
 
-1. Register both apps. The B2CDeviceLogin webapp needs to be registered as a public client with 
-reply urls: 'https://[your url]/signin-oidc'. TesApp is configured to use 'app://devicecode'
+1. Register the client app with two reply urls: 'app://devicecode' (or similar public client reply url) **and** 'https://[your url]/signin-oidc', where your url is the url where B2CDeviceCode is deployed. B2CDeviceCode web app does not
+need to be registered in B2C - it impersonates the client app whenever it initiates requests to B2C.
 2. Client application uses MSAL to request an access token. It is configured as if using ADFS - that's the only way I found to use MSAL
 with a custom endpoint for requesting tokens.
 
