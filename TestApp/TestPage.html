@@ -6,9 +6,10 @@
     <title>Device Code sample page</title>
     <script>
         var tokenRequestBody = "";
+        var interval = 0;
+        var countDown = 0;
         function initiateDC() {
             document.getElementById("initResponse").style.visibility = "hidden";
-            document.getElementById("tokenResponse").style.visibility = "hidden";
             var xhttp = new XMLHttpRequest();
             xhttp.onreadystatechange = function () {
                 if (this.readyState == 4) {
@@ -20,7 +21,9 @@
                         document.getElementById("verificationUrl").innerHTML = resp.verification_url;
                         document.getElementById("verificationUrl").href = resp.verification_url;
                         tokenRequestBody = "client_id=f0df2619-4370-4f7e-8a77-b6a97fe2cabc&client_info=1&scope=https%3A%2F%2Fmrochonb2cprod.onmicrosoft.com%2Fwebapi%2Fread_policies+offline_access+openid+profile&grant_type=device_code&device_code=" + resp.device_code;
-                        //document.getElementById("getTokenBody").innerHTML = tokenRequestBody;
+                        interval = resp.interval * 1000;
+                        countDown = resp.expires_in / resp.interval;
+                        setTimeout(getToken, interval);
                     } else {
                         document.getElementById("response").innerHTML = this.status;
                     }
@@ -33,16 +36,18 @@
             document.getElementById("response").innerHTML = "Started...";
         }
         function getToken() {
-            document.getElementById("tokenResponse").style.visibility = "hidden";
+            document.getElementById("trStatus").innerHTML = "checking for token...";
             var xhttp = new XMLHttpRequest();
             xhttp.onreadystatechange = function () {
                 if (this.readyState == 4) {
-                    document.getElementById("tokenResponse").style.visibility = "visible";
-                    if (this.status == 200) {
-                        document.getElementById("trResponse").innerHTML = this.responseText;
-                    } else {
-                        document.getElementById("trResponse").innerHTML = this.status;
-                    }
+                    document.getElementById("trStatus").innerHTML = this.status;
+                    document.getElementById("trResponse").innerHTML = this.responseText;
+                    if (this.status == 404) {
+                        if (--countDown > 0) {
+                            document.getElementById("trStatus").innerHTML = "waiting for user sign in...";
+                            setTimeout(getToken, interval);
+                        }
+                    } 
                 }
             };
             xhttp.open("POST", "https://b2cdevicecode.azurewebsites.net/adfs/oauth2/token?p=B2C_1_BasicSUSI", true);
@@ -50,13 +55,12 @@
             xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
             //xhttp.send(document.getElementById("getTokenBody").innerHTML);
             xhttp.send(tokenRequestBody);
-            document.getElementById("response").innerHTML = "Getting token...";
     }
     </script>
 </head>
 <body>
 
-    <h2>Get access token from B2C using OAuth2 Device Authorization Code flow</h2>
+    <h2>OAuth2 Device Authorization Code grant with B2C</h2>
 
     <button type="button" onclick="initiateDC()">Initiate Device Code request</button>
     <p><b>POST</b> <i>https://b2cdevicecode.azurewebsites.net/adfs/oauth2/devicecode?p=B2C_1_BasicSUSI</i></p>
@@ -70,16 +74,17 @@
         <br />
         <p>Navigate to this url on this or any other device: <a id="verificationUrl" /></p>
         <p>And enter this code: <b id="userCode"></b></p>
-        <p>   signin/up. The Get Token button below simulates device's attempts to get the token. It should succeed once you have signedin using above url.</p>
         <br />
 
         <h3>Token request</h3>
         <p id="tokenReqUrl" />
         <p id="tokenReqBody" />
+        <p>This page will attempt to get the token automatically at regular period as specified in the above response. You can invoke it manually by pressing the button.</p>
         <button onclick="getToken()">Get token</button>
-        <div id="tokenResponse" style="visibility:hidden;">
-            <p id="trResponse">...</p>
-        </div>
+        <p id="trStatus">...</p>
+        <p id="trResponse">...</p>
     </div>
+    <br/>
+    <a href="https://github.com/mrochon/b2cdevicecode">https://github.com/mrochon/b2cdevicecode</a>
 </body>
 </html>
