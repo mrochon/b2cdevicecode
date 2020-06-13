@@ -6,8 +6,7 @@
     <title>Device Code sample page</title>
     <script>
         var tokenRequestBody = "";
-        var interval = 0;
-        var countDown = 0;
+        var reqInterval = interval = 0;
         function initiateDC() {
             document.getElementById("initResponse").style.visibility = "hidden";
             var xhttp = new XMLHttpRequest();
@@ -21,9 +20,16 @@
                         document.getElementById("verificationUrl").innerHTML = resp.verification_url;
                         document.getElementById("verificationUrl").href = resp.verification_url;
                         tokenRequestBody = "client_id=f0df2619-4370-4f7e-8a77-b6a97fe2cabc&client_info=1&scope=https%3A%2F%2Fmrochonb2cprod.onmicrosoft.com%2Fwebapi%2Fread_policies+offline_access+openid+profile&grant_type=device_code&device_code=" + resp.device_code;
-                        interval = resp.interval * 1000;
-                        countDown = resp.expires_in / resp.interval;
-                        setTimeout(getToken, interval);
+                        interval = reqInterval = resp.interval;
+                        var totalElapsedCountDown = resp.expires_in;
+                        var countDownClock = setInterval(function () {
+                            if (interval-- <= 0) {
+                                getToken();
+                                interval = resp.interval;
+                            } else
+                                document.getElementById("getTokenButton").innerHTML = (interval).toString();
+                            if (--totalElapsedCountDown <= 0) clearInterval(countDownClock);
+                        }, 1000);
                     } else {
                         document.getElementById("response").innerHTML = this.status;
                     }
@@ -36,6 +42,7 @@
             document.getElementById("response").innerHTML = "Started...";
         }
         function getToken() {
+            interval = reqInterval;
             document.getElementById("trStatus").innerHTML = "checking for token...";
             var xhttp = new XMLHttpRequest();
             xhttp.onreadystatechange = function () {
@@ -43,10 +50,7 @@
                     document.getElementById("trStatus").innerHTML = this.status;
                     document.getElementById("trResponse").innerHTML = this.responseText;
                     if (this.status == 404) {
-                        if (--countDown > 0) {
                             document.getElementById("trStatus").innerHTML = "waiting for user sign in...";
-                            setTimeout(getToken, interval);
-                        }
                     } 
                 }
             };
@@ -79,8 +83,8 @@
         <h3>Token request</h3>
         <p id="tokenReqUrl" />
         <p id="tokenReqBody" />
-        <p>This page will attempt to get the token automatically at regular period as specified in the above response. You can invoke it manually by pressing the button.</p>
-        <button onclick="getToken()">Get token</button>
+        <p>This page will attempt to get the token automatically at a regular interval as specified in the above response. You can also invoke it manually by pressing the button.</p>
+        <button id="getTokenButton" onclick="getToken()" style="width:90px;height:20px;">Get token</button>
         <p id="trStatus">...</p>
         <p id="trResponse">...</p>
     </div>
